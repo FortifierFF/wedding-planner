@@ -1,10 +1,14 @@
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { z } from "zod";
-import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-import bcrypt from "bcryptjs";
+
+// Temporary mock user for development
+const MOCK_USER = {
+  id: "mock-user-id",
+  name: "Test User",
+  email: "test@example.com",
+  image: null,
+  role: "user",
+};
 
 export const authConfig: NextAuthConfig = {
   pages: {
@@ -15,7 +19,13 @@ export const authConfig: NextAuthConfig = {
     newUser: "/register",
   },
   callbacks: {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     authorized({ auth, request: { nextUrl } }) {
+      // During development, consider everything authorized
+      return true;
+
+      // When ready to implement auth again, use this:
+      /*
       const isLoggedIn = !!auth?.user;
       const isOnDashboard = nextUrl.pathname.startsWith("/dashboard");
       const isOnAdmin = nextUrl.pathname.startsWith("/admin");
@@ -41,6 +51,7 @@ export const authConfig: NextAuthConfig = {
       }
 
       return true;
+      */
     },
     jwt({ token, user }) {
       if (user) {
@@ -68,7 +79,14 @@ export const authConfig: NextAuthConfig = {
         },
         password: { label: "Password", type: "password" },
       },
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       async authorize(credentials) {
+        // For development, just return a mock user
+        console.log("Bypassing authentication during development");
+        return MOCK_USER;
+
+        // When ready to implement auth again, use this:
+        /*
         const parsedCredentials = z
           .object({ email: z.string().email(), password: z.string().min(6) })
           .safeParse(credentials);
@@ -103,6 +121,7 @@ export const authConfig: NextAuthConfig = {
           image: user.image,
           role: user.role,
         };
+        */
       },
     }),
     // Add more providers here as needed (Google, Facebook, etc.)
